@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@layer base {
+  @media print {
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+    
+    body {
+      background: #fff;
+    }
+  }
+}

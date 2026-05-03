@@ -12,6 +12,21 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.2.1"
+    "@astrojs/node": "^10.0.6",
+    "@astrojs/react": "^5.0.4",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.2.1",
+    "groq-sdk": "^1.1.2",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.13",
+    "tailwindcss": "^4.2.4"
   }
 }

@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proforma / Cotización</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        color: #222;
+        padding: 30px;
+      }
+
+      .acciones {
+        max-width: 900px;
+        margin: 0 auto 14px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .btn-exportar {
+        border: 1px solid #222;
+        background: #222;
+        color: #fff;
+        padding: 10px 16px;
+        font-size: 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .btn-exportar:hover {
+        background: #111;
+      }
+
+      .proforma {
+        max-width: 900px;
+        margin: auto;
+        background: #fff;
+        padding: 40px;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #222;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .header-left {
+        flex: 1;
+        min-width: 420px;
+      }
+
+      .logo-area {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .datos-empresa {
+        max-width: 560px;
+      }
+
+      .datos-empresa p {
+        margin-bottom: 6px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .datos-cliente {
+        margin-top: 10px;
+      }
+
+      .logo-box {
+        width: 100%;
+        max-width: 350px;
+        line-height: 0;
+      }
+
+      .logo-box img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .header-right {
+        min-width: 260px;
+      }
+
+      .cotizacion-bloque {
+        min-width: 260px;
+        border: 1px solid #222;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .cotizacion-bloque .fila {
+        padding: 12px 14px;
+        font-size: 14px;
+        border-bottom: 1px solid #222;
+      }
+
+      .cotizacion-bloque .fila:last-child {
+        border-bottom: none;
+      }
+
+      .cotizacion-bloque strong {
+        display: block;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+
+      .cotizacion-bloque .fila-ruc strong,
+      .cotizacion-bloque .fila-cotizacion strong {
+        font-size: 16px;
+        letter-spacing: 0.06em;
+      }
+
+      .cotizacion-bloque .fila-ruc .valor-ruc {
+        font-size: 24px;
+        font-weight: bold;
+        line-height: 1.1;
+      }
+
+      .cotizacion-bloque .fila-cotizacion strong {
+        margin-bottom: 4px;
+      }
+
+      .cotizacion-bloque .fila-cotizacion .valor-cotizacion {
+        font-size: 30px;
+        font-weight: bold;
+        line-height: 1.1;
+      }
+
+      .cotizacion-bloque .fila-cotizacion {
+        border-bottom: none;
+      }
+
+      .fechas-cotizacion {
+        margin-top: 14px;
+        border: 1px solid #222;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .fechas-cotizacion .fila {
+        padding: 12px 14px;
+        font-size: 14px;
+        border-bottom: 1px solid #222;
+      }
+
+      .fechas-cotizacion strong {
+        display: block;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+      }
+
+      .fechas-cotizacion .fila:last-child {
+        border-bottom: none;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        margin-bottom: 30px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 12px;
+        text-align: left;
+        font-size: 14px;
+      }
+
+      th {
+        background: #f0f0f0;
+      }
+
+      .totales {
+        width: 320px;
+        margin-left: auto;
+        border: 1px solid #ccc;
+      }
+
+      .totales div {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 15px;
+        border-bottom: 1px solid #ccc;
+        font-size: 14px;
+      }
+
+      .totales div:last-child {
+        border-bottom: none;
+        background: #f7f7f7;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .detalle-final {
+        margin-top: 26px;
+      }
+
+      .importe-letras {
+        border: 1px solid #ccc;
+        background: #fafafa;
+        padding: 12px 14px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+      }
+
+      .importe-letras .titulo {
+        font-weight: bold;
+      }
+
+      .datos-bancarios {
+        margin: 20px auto 0;
+        max-width: 620px;
+      }
+
+      .datos-bancarios .fila {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .datos-bancarios .etiqueta {
+        font-weight: bold;
+        text-align: left;
+      }
+
+      .firma-negocio {
+        margin-top: 28px;
+        text-align: center;
+      }
+
+      .espacio-firma {
+        height: 54px;
+      }
+
+      .linea-firma-negocio {
+        width: 280px;
+        border-top: 1px solid #222;
+        margin: 0 auto 8px;
+      }
+
+      .firma-datos {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .firma-datos p {
+        margin: 0;
+      }
+
+      @media print {
+        @page {
+          size: A4;
+          margin: 7mm;
+        }
+
+        body {
+          background: #fff;
+          padding: 0;
+        }
+
+        .acciones {
+          display: none;
+        }
+
+        .proforma {
+          box-shadow: none;
+          border: none;
+          max-width: 100%;
+          padding: 14px;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        .header {
+          display: grid;
+          grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+          gap: 10px;
+          padding-bottom: 10px;
+          margin-bottom: 12px;
+          border-bottom-width: 1px;
+        }
+
+        .header-left {
+          min-width: 0;
+        }
+
+        .header-right {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .logo-box {
+          max-width: 220px;
+        }
+
+        .logo-area {
+          gap: 6px;
+        }
+
+        .datos-cliente {
+          margin-top: 6px;
+        }
+
+        .datos-empresa p {
+          font-size: 12.5px;
+          line-height: 1.3;
+          margin-bottom: 4px;
+        }
+
+        .cotizacion-bloque,
+        .fechas-cotizacion {
+          min-width: 0;
+          width: 100%;
+          border-radius: 6px;
+        }
+
+        .cotizacion-bloque .fila,
+        .fechas-cotizacion .fila {
+          font-size: 12.5px;
+          padding: 8px 10px;
+        }
+
+        .cotizacion-bloque strong,
+        .fechas-cotizacion strong {
+          font-size: 11px;
+          margin-bottom: 2px;
+        }
+
+        .cotizacion-bloque .fila-ruc strong,
+        .cotizacion-bloque .fila-cotizacion strong {
+          font-size: 12px;
+        }
+
+        .cotizacion-bloque .fila-ruc .valor-ruc {
+          font-size: 17px;
+        }
+
+        .cotizacion-bloque .fila-cotizacion .valor-cotizacion {
+          font-size: 21px;
+        }
+
+        table {
+          margin-bottom: 12px;
+        }
+
+        th,
+        td {
+          font-size: 12.5px;
+          padding: 6px 7px;
+        }
+
+        .totales {
+          width: 250px;
+        }
+
+        .totales div {
+          font-size: 12.5px;
+          padding: 7px 10px;
+        }
+
+        .detalle-final {
+          margin-top: 10px;
+        }
+
+        .importe-letras {
+          font-size: 12.5px;
+          padding: 8px 10px;
+        }
+
+        .datos-bancarios {
+          margin-top: 10px;
+          max-width: 100%;
+        }
+
+        .datos-bancarios .fila {
+          grid-template-columns: 160px 1fr;
+          font-size: 12.5px;
+          margin-bottom: 4px;
+          gap: 6px;
+        }
+
+        .firma-negocio {
+          margin-top: 10px;
+        }
+
+        .espacio-firma {
+          height: 20px;
+        }
+
+        .linea-firma-negocio {
+          width: 230px;
+          margin-bottom: 6px;
+        }
+
+        .firma-datos {
+          font-size: 12px;
+        }
+
+        .totales,
+        .detalle-final {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+      }
+
+      @media (max-width: 740px) {
+        .header-left {
+          min-width: 100%;
+        }
+
+        .cotizacion-bloque {
+          width: 100%;
+        }
+
+        .header-right {
+          width: 100%;
+        }
+
+        .importe-letras {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .datos-bancarios .fila {
+          grid-template-columns: 1fr;
+          gap: 2px;
+          margin-bottom: 10px;
+        }
+
+        .datos-bancarios .etiqueta {
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="acciones">
+      <button type="button" class="btn-exportar" id="btnExportarPdf">
+        Exportar PDF
+      </button>
+    </div>
+
+    <div class="proforma">
+      <div class="header">
+        <div class="header-left">
+          <div class="logo-area">
+            <div class="logo-box">
+              <img src="logo.png" alt="Logo de la empresa" />
+            </div>
+            <div
+              class="servicios-empresa"
+              style="font-size: 13px; line-height: 1.4; margin: 10px 0"
+            >
+              <strong
+                >“VENTA DE TELAS, TAPASOLES, TULES EXCLUSIVOS PARA
+                CORTINAS”</strong
+              >
+              <div style="font-size: 8.5px; line-height: 1.25; margin-top: 4px">
+                CONFECCIONAMOS CORTINAS, ESTORES, ONDAS DRAPEADAS Y ROLLERS,<br />
+                PERSIANAS VERTICALES, HORIZONTALES DE MADERA, PUERTA
+                PLEGADIZA,<br />
+                TAPICERIA, FABRICACION DE MUEBLES DE MELAMINE,<br />
+                VIDRIOS TEMPLADOS PARA BAÑOS
+              </div>
+            </div>
+            <div class="datos-empresa">
+              <p>
+                <strong>Dirección:</strong> Jr. Gamarra 653 2do Sotano Tda.
+                Galeria Plaza La Victoria
+              </p>
+              <div class="datos-cliente">
+                <p><strong>Cliente:</strong> Inversiones San Martin S.A.C.</p>
+                <p><strong>DNI/RUC:</strong> 20605432109</p>
+                <p><strong>Teléfono:</strong> 987654321</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="cotizacion-bloque">
+            <div class="fila fila-ruc">
+              <strong>RUC</strong>
+              <div class="valor-ruc">10456789012</div>
+            </div>
+            <div class="fila fila-cotizacion">
+              <strong>Cotización</strong>
+              <div class="valor-cotizacion">N° 123</div>
+            </div>
+          </div>
+
+          <div class="fechas-cotizacion">
+            <div class="fila">
+              <strong>Fecha de emisión</strong>
+              26/04/2026
+            </div>
+            <div class="fila">
+              <strong>Fecha de vencimiento</strong>
+              03/05/2026
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Cant.</th>
+            <th>Descripción</th>
+            <th>P. Unit.</th>
+            <th>Importe</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2</td>
+            <td>Instalación de sistema de iluminación LED</td>
+            <td>S/ 150.00</td>
+            <td>S/ 300.00</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Tablero eléctrico de control</td>
+            <td>S/ 230.00</td>
+            <td>S/ 230.00</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Servicio de puesta en marcha y pruebas</td>
+            <td>S/ 150.00</td>
+            <td>S/ 150.00</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="totales">
+        <div>
+          <span>Subtotal</span>
+          <span>S/ 680.00</span>
+        </div>
+        <div>
+          <span>IGV</span>
+          <span>S/ 0.00</span>
+        </div>
+        <div>
+          <span>Total</span>
+          <span>S/ 680.00</span>
+        </div>
+      </div>
+
+      <div class="detalle-final">
+        <div class="importe-letras">
+          <span class="titulo">IMPORTE EN LETRAS:</span>
+          <span>Seiscientos ochenta y 00/100 soles</span>
+        </div>
+
+        <div class="datos-bancarios">
+          <div class="fila">
+            <span class="etiqueta">Cuenta bancaria BCP:</span>
+            <span>19124261433097</span>
+          </div>
+          <div class="fila">
+            <span class="etiqueta">CCI:</span>
+            <span>00219112426143309752</span>
+          </div>
+          <div class="fila">
+            <span class="etiqueta">Correo:</span>
+            <span>vivianagon430@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="firma-negocio">
+          <div class="espacio-firma"></div>
+          <div class="linea-firma-negocio"></div>
+          <div class="firma-datos">
+            <p>Firma del dueño del negocio</p>
+            <p>Viviana Gonzales Retuerto - Cel: 960172447</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const botonExportar = document.getElementById("btnExportarPdf");
+
+      botonExportar.addEventListener("click", () => {
+        const tituloOriginal = document.title;
+        document.title = "cotizacion-123";
+        globalThis.print();
+        document.title = tituloOriginal;
+      });
+    </script>
+  </body>
+</html>
