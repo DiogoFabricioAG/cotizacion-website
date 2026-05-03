@@ -202,20 +202,42 @@ export default function CotizadorApp() {
       return data;
     }
 
+    if (!storedApiKey) {
+      alert("Configura tu API Key primero.");
+      return data;
+    }
+
     setIsTranslating(true);
     try {
-      const response = await fetch('/api/translate-number', {
+      const systemPrompt = `Eres un conversor matemático muy estricto. Tu única tarea es convertir un número con decimales a texto legal de moneda en Perú.
+Reglas estrictas:
+1. SIEMPRE devuelve ÚNICAMENTE el texto resultante. Cero explicaciones, cero formatos markdown, nada más que el texto.
+2. Formato: "[Número en letras] y [Céntimos]/100 soles".
+3. Capitaliza la primera letra de la respuesta.
+4. Ejemplo: Si recibes "680.00" respondes "Seiscientos ochenta y 00/100 soles".
+5. Ejemplo: Si recibes "1545.50" respondes "Un mil quinientos cuarenta y cinco y 50/100 soles".`;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          total,
-          apiKey: storedApiKey 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedApiKey}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: Number(total).toFixed(2) }
+          ],
+          temperature: 0.1,
+          max_tokens: 50
         }),
       });
 
       if (!response.ok) throw new Error('Error al traducir');
       
-      const { content } = await response.json();
+      const jsonResponse = await response.json();
+      const content = jsonResponse.choices[0]?.message?.content?.trim() || "";
       
       const newData = {
         ...data,
@@ -348,29 +370,90 @@ export default function CotizadorApp() {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
+    if (!storedApiKey) {
+      alert("Por favor, configura tu API Key de Groq en la configuración primero.");
+      setShowSettings(true);
+      return;
+    }
+
     const newMessages = [...messages, { role: 'user', content: inputMessage }];
     setMessages(newMessages);
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const systemPrompt = `Eres un asistente experto en ventas para una tienda de cortinas y decoración ("VENTA DE TELAS, TAPASOLES, TULES EXCLUSIVOS PARA CORTINAS").
+Tu objetivo es ayudar al usuario a generar una cotización.
+
+Habla de forma amable y concisa. Pregunta los datos que te falten paso a paso si el usuario no los da.
+
+Los datos que necesitas recopilar para la cotización son:
+1. Nombre o Razón Social del cliente.
+2. DNI o RUC del cliente.
+3. Teléfono del cliente.
+4. Los productos o servicios a cotizar. Para CADA producto/servicio necesitas saber:
+   - Descripción clara
+   - Cantidad
+   - Precio unitario en Soles (S/)
+
+Cálculos importantes que debes hacer internamente (no los muestres en el JSON final a menos que el usuario lo pida, el frontend los calculará, pero sé consciente de ellos):
+- Importe = Cantidad * Precio Unitario.
+- Subtotal = Suma de todos los importes.
+
+CUANDO TENGAS SUFICIENTE INFORMACIÓN para actualizar la cotización (ej. tienes el nombre, o tienes un producto), DEBES responder obligatoriamente con el siguiente formato JSON AL FINAL de tu mensaje, encerrado en un bloque de código markdown tipo json (\`\`\`json ... \`\`\`). 
+
+Estructura del JSON requerida (puedes enviar campos vacíos si aún no los tienes, pero respeta la estructura):
+\`\`\`json
+{
+  "cliente": {
+    "nombre": "Nombre Del Cliente Capitalizado",
+    "ruc": "DNI/RUC",
+    "telefono": "Teléfono"
+  },
+  "items": [
+    {
+      "cantidad": 2,
+      "descripcion": "Descripción del Producto (Capitaliza apropiadamente)",
+      "precioUnitario": 150.00
+    }
+  ]
+}
+\`\`\`
+
+Reglas estrictas:
+- Siempre saluda y sé cortés.
+- Aplica formato de Título (Title Case) en el nombre del cliente y descripciones de los productos.
+- IMPORTANTE: NO capitalices conectores, preposiciones ni artículos (de, con, para, en, a, y, el, la, los, las). Tampoco capitalices unidades de medida (cm, m, mm, kg, ml).
+- Ejemplo CORRECTO: "Escritorios de Madera 120x60 cm". Ejemplo INCORRECTO: "Escritorios De Madera 120x60 Cm".
+- Si el usuario dice "Quiero cotizar 3 cortinas roller a 120 soles", extrae esa información, aplica la capitalización correcta y envíala en el JSON.
+- El bloque JSON es esencial para que la aplicación actualice la vista previa en tiempo real.`;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedApiKey}`
+        },
         body: JSON.stringify({
-          messages: newMessages.slice(-10).map(m => ({
-            role: m.role,
-            content: m.content
-          })),
-          apiKey: storedApiKey
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...newMessages.slice(-10).map(m => ({
+              role: m.role,
+              content: m.content
+            }))
+          ],
+          temperature: 0.5,
+          max_tokens: 1024
         }),
       });
 
       if (!response.ok) throw new Error('Network response was not ok');
       
-      const data = await response.json();
+      const jsonResponse = await response.json();
+      const rawContent = jsonResponse.choices[0]?.message?.content || "";
       
-      const displayContent = parseBotResponse(data.content);
+      const displayContent = parseBotResponse(rawContent);
 
       if (displayContent) {
         setMessages(prev => [...prev, { role: 'assistant', content: displayContent }]);
@@ -378,7 +461,7 @@ export default function CotizadorApp() {
 
     } catch (error) {
       console.error('Error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Lo siento, hubo un error al conectar con el servidor. Por favor intenta de nuevo.' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Lo siento, hubo un error al conectar con Groq. Revisa tu API Key o intenta de nuevo.' }]);
     } finally {
       setIsLoading(false);
     }
